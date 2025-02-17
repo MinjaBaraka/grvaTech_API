@@ -10,7 +10,7 @@ const app = express();
 
 // CORS Configuration
 const allowedOrigins = [
-  "https://grva-tech-api.vercel.app/",
+  "https://grva-tech-api.vercel.app",
   "http://localhost:5173",
   "http://localhost:3000",
 ];
