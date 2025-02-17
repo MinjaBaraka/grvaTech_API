@@ -8,11 +8,36 @@ const bodyParser = require('body-parser');
 
 const app = express();
 
-// Middleware
-app.use(helmet()); // Security headers
-app.use(cors()); // Enable CORS
-app.use(morgan('dev')); // Logging
-app.use(bodyParser.json()); // Parse JSON bodies
+// CORS Configuration
+const allowedOrigins = [
+    'https://vercel.com/minjabarakas-projects/grva-tech-api',    
+    'http://localhost:5173',           
+    'http://localhost:3000'            
+];
+
+app.use(cors({
+    origin: function (origin, callback) {
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+        
+        if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+}));
+
+// Handle preflight requests
+app.options('*', cors());
+
+// Other middleware
+app.use(helmet());
+app.use(morgan('dev'));
+app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 // Database connection
@@ -33,7 +58,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/services', serviceRoutes);
 app.use('/api/transactions', transactionRoutes);
 
-// Routes (to be added)
+// Welcome route
 app.get('/', (req, res) => {
     res.json({ message: 'Welcome to the API' });
 });
@@ -52,6 +77,12 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-}); 
+
+// Only start the server if not in production (Vercel handles this in production)
+if (process.env.NODE_ENV !== 'production') {
+    app.listen(PORT, () => {
+        console.log(`Server is running on port ${PORT}`);
+    });
+}
+
+module.exports = app;
